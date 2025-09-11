@@ -4,10 +4,14 @@ services:
       context: .
     # In production we run gunicorn (no source mount)
     # command is taken from Dockerfile default, but you may override here
+#    command:
+#      [ "/entrypoint.sh", "gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--log-file", "-" ]
     env_file:
-      - .env.prod
+      - .env
     environment:
-      - DEBUG=0
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     restart: unless-stopped
     depends_on:
       - db
@@ -15,7 +19,7 @@ services:
     ports:
       - "8000:8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz/ || exit 1"]
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:8000/healthz/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -24,7 +28,11 @@ services:
     image: postgres:15
     restart: always
     env_file:
-      - .env.prod
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
