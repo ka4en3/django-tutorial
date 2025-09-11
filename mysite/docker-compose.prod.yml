@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  web:
+    build:
+      context: .
+    # In production we run gunicorn (no source mount)
+    # command is taken from Dockerfile default, but you may override here
+    env_file:
+      - .env.prod
+    environment:
+      - DEBUG=0
+    restart: unless-stopped
+    depends_on:
+      - db
+    # If exposing direct port (behind reverse-proxy like nginx / traefik, don't expose here)
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:15
+    restart: always
+    env_file:
+      - .env.prod
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Do NOT expose DB port on production host
+    # ports: []
+
+volumes:
+  postgres_data:

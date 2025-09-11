@@ -1,0 +1,30 @@
+# Ignore Python cache and virtualenvs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore environment directories and local files
+env/
+venv/
+.venv/
+.env.example
+.env.prod
+.env
+
+# Version control
+.git
+.gitignore
+
+# Build artifacts
+build/
+dist/
+*.egg-info
+
+# Database files
+*.sqlite3
+*.db
+
+# Media and static local files
+media/
+staticfiles/

@@ -1,28 +1,41 @@
-# Use official Python image
+# Use an official slim Python runtime as a parent image
 FROM python:3.10-slim
 
-# Set workdir
+# Do not write .pyc files and do not buffer stdout/stderr (for Docker logs)
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# Install build deps for psycopg2
+# Install system dependencies needed to build some wheels (e.g., Psycopg)
+# Keep --no-install-recommends to reduce image size
 RUN apt-get update \
-    && apt-get install -y build-essential libpq-dev \
+    && apt-get install -y --no-install-recommends build-essential libpq-dev gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only requirements first for better caching
-COPY requirements.txt ./
+# Copy requirements first for caching in docker layer
+COPY requirements.txt .
+
+# Install Python deps
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Copy project files
 COPY . /app
 
-# Collect static files
-ENV PORT=8000
-ENV PYTHONUNBUFFERED=1
+# Create an unprivileged user and transfer ownership
+RUN useradd --create-home appuser \
+    && chown -R appuser:appuser /app
 
-# Expose port
+USER appuser
+
+# Expose port for the container
+ENV PORT=8000
 EXPOSE ${PORT}
 
-# Default command
-CMD ["gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--log-file", "-"]
+# Copy entrypoint script and make executable
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Default command (can be overridden in docker-compose)
+CMD ["/entrypoint.sh", "gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--log-file", "-"]

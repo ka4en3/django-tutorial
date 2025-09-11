@@ -20,18 +20,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
-# Load .env in development if present
-if os.path.exists(BASE_DIR / '.env'):
+# Default auto field for Django >= 3.2
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Load .env.example in development if present
+if os.path.exists(BASE_DIR / '.env.example'):
     # python-dotenv is installed; keep this purely optional for local dev
     from dotenv import load_dotenv
 
-    load_dotenv(BASE_DIR / '.env')
+    load_dotenv(BASE_DIR / '.env.example')
 
 # SECURITY: secrets and config via env
 SECRET_KEY = os.getenv('SECRET_KEY', 'unsafe-default-secret-for-dev-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('1', 'true', 'yes')
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
 # ALLOWED_HOSTS: split csv from env
 allowed_hosts = os.getenv('ALLOWED_HOSTS', '')
@@ -39,6 +42,10 @@ if allowed_hosts:
     ALLOWED_HOSTS = [h.strip() for h in allowed_hosts.split(',')]
 else:
     ALLOWED_HOSTS = []
+
+# safe default when DEBUG=True
+if DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Application definition
 
@@ -152,3 +159,25 @@ LOGGING = {
         'level': os.getenv('LOG_LEVEL', 'INFO'),
     },
 }
+
+# Security settings for non-debug (production)
+if not DEBUG:
+    # Cookies only over HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Recommended headers
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+
+    # Redirect HTTP -> HTTPS
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True').lower() in ('1', 'true', 'yes')
+
+    # HSTS
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True').lower() in ('1', 'true', 'yes')
+    SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False').lower() in ('1', 'true', 'yes')
+
+    # If you're behind a proxy (nginx, load balancer) that sets X-Forwarded-Proto:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

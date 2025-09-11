@@ -3,7 +3,8 @@ version: '3.9'
 services:
   web:
     build: .
-    command: gunicorn mysite.wsgi:application --bind 0.0.0.0:8000 --workers 3 --log-file -
+    # For development we run the Django dev server with volumes (fast edit cycle)
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
@@ -16,12 +17,10 @@ services:
   db:
     image: postgres:15
     restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: dbname
+    env_file:
+      - .env
     ports:
-      - "5432:5432"
+      - "5432:5432"  # dev only — allows local DB clients to connect
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
