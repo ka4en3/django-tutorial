@@ -10,7 +10,7 @@ WORKDIR /app
 # Install system dependencies needed to build some wheels (e.g., Psycopg)
 # Keep --no-install-recommends to reduce image size
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential libpq-dev gcc \
+    && apt-get install -y -y curl --no-install-recommends build-essential libpq-dev gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for caching in docker layer
@@ -35,7 +35,6 @@ EXPOSE ${PORT}
 
 # Copy entrypoint script and make executable
 COPY --chmod=755 ./entrypoint.sh /entrypoint.sh
-# RUN chmod +x /entrypoint.sh
 
 # Default command (can be overridden in docker-compose)
 CMD ["/entrypoint.sh", "gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--log-file", "-"]
