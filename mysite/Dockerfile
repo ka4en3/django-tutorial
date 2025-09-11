@@ -34,8 +34,8 @@ ENV PORT=8000
 EXPOSE ${PORT}
 
 # Copy entrypoint script and make executable
-COPY ./entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY --chmod=755 ./entrypoint.sh /entrypoint.sh
+# RUN chmod +x /entrypoint.sh
 
 # Default command (can be overridden in docker-compose)
 CMD ["/entrypoint.sh", "gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--log-file", "-"]
