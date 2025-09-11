@@ -23,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Default auto field for Django >= 3.2
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Load .env.example in development if present
-if os.path.exists(BASE_DIR / '.env.example'):
+# Load .env in development if present
+if os.path.exists(BASE_DIR / '.env'):
     # python-dotenv is installed; keep this purely optional for local dev
     from dotenv import load_dotenv
 
-    load_dotenv(BASE_DIR / '.env.example')
+    load_dotenv(BASE_DIR / '.env')
 
 # SECURITY: secrets and config via env
 SECRET_KEY = os.getenv('SECRET_KEY', 'unsafe-default-secret-for-dev-only')
